@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMind AI — Smart Study Planner</title>
+  <meta name="description"
+    content="StudyMind AI is an intelligent study planner powered by AI. Generate personalized study schedules, track progress, and optimize your learning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css?v=5" />
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      document.body.innerHTML += "<div style='color:red; font-size: 30px; position:absolute; z-index:9999; top:0; left:0; background:white; border: 5px solid red; padding: 20px;'>ERROR: " + msg + "<br>Line: " + line + "</div>";
+    };
+  </script>
+</head>
+
+<body>
+  <!-- Animated Background -->
+  <div class="bg-grid"></div>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2C7.373 2 2 7.373 2 14s5.373 12 12 12 12-5.373 12-12S20.627 2 14 2z" fill="url(#logoGrad)" />
+            <path d="M9 10h10M9 14h6M9 18h8" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            <circle cx="20" cy="8" r="3" fill="#00f5d4" />
+            <defs>
+              <linearGradient id="logoGrad" x1="2" y1="2" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#7c3aed" />
+                <stop offset="1" stop-color="#4f46e5" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">StudyMind <span class="ai-badge">AI</span></span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard" id="nav-dashboard">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="1" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+          <rect x="10" y="1" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+          <rect x="1" y="10" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+          <rect x="10" y="10" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="ai-planner" id="nav-ai-planner">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" />
+          <path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        <span>AI Planner</span>
+        <span class="nav-badge">AI</span>
+      </a>
+      <a href="#" class="nav-item" data-page="subjects" id="nav-subjects">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3 3h12a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor"
+            stroke-width="1.5" />
+          <path d="M6 7h6M6 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span>Subjects</span>
+      </a>
+      <a href="#" class="nav-item" data-page="schedule" id="nav-schedule">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="3" width="16" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M5 1v4M13 1v4M1 7h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span>Schedule</span>
+      </a>
+      <a href="#" class="nav-item" data-page="timer" id="nav-timer">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="10" r="7" stroke="currentColor" stroke-width="1.5" />
+          <path d="M9 7v3l2 2M6.5 2h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        <span>Focus Timer</span>
+      </a>
+      <a href="#" class="nav-item" data-page="content" id="nav-content">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M2 3h14M2 7h10M2 11h12M2 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="15" cy="14" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M15 11.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span>Content</span>
+        <span class="nav-badge" style="background:linear-gradient(135deg,#7c3aed,#00f5d4);color:#fff;">NEW</span>
+      </a>
+      <a href="#" class="nav-item" data-page="notes" id="nav-notes">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M4 2h7l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" />
+          <path d="M11 2v4h4M6 9h6M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span>Notes</span>
+      </a>
+      <a href="#" class="nav-item" data-page="agent-hub" id="nav-agent-hub">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="3" r="1.5" fill="currentColor"/>
+        </svg>
+        <span>Agent Hub</span>
+        <span class="nav-badge" style="background:#f59e0b;color:#0f172a;">AUTO</span>
+      </a>
+      <a href="#" class="nav-item" data-page="ai-tutor" id="nav-ai-tutor">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 16c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7z" stroke="currentColor"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M6 9h6M6 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span>AI Tutor</span>
+        <span class="nav-badge" style="background:#00f5d4;color:#0f172a;">NEW</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="streak-card">
+        <div class="streak-icon"></div>
+        <div class="streak-info">
+          <div class="streak-count" id="streakCount">0</div>
+          <div class="streak-label">Day Streak</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <p class="page-subtitle" id="pageSubtitle">Your AI-powered study command center</p>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box" style="position: relative;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+            <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+          <input type="text" placeholder="Search topics..." id="globalSearch" autocomplete="off" />
+          <div id="searchResults"
+            style="display:none; position:absolute; top:40px; left:0; right:0; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; z-index:1000; max-height:300px; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+          </div>
+        </div>
+        <div style="position: relative;">
+          <button class="btn-icon" id="notifBtn" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2a5 5 0 015 5v3l1.5 2H2.5L4 10V7a5 5 0 015-5zM7 15a2 2 0 004 0" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <span class="notif-dot" id="notifDot" style="display:none;"></span>
+          </button>
+          <div id="notifDropdown"
+            style="display:none; position:absolute; top:40px; right:0; width:300px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; z-index:1000; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <div
+              style="padding:15px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="margin:0;">Notifications</h4>
+              <button id="markReadBtn"
+                style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.85em;">Mark all
+                read</button>
+            </div>
+            <div id="notifList" style="max-height:300px; overflow-y:auto; padding:10px;">
+              <p style="text-align:center; color:var(--text-muted); font-size:0.9em; margin:10px 0;">No new
+                notifications</p>
+            </div>
+          </div>
+        </div>
+        <div class="avatar" id="userAvatar">S</div>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <div class="page active" id="page-dashboard">
+      <div class="dashboard-grid">
+
+        <!-- Stats Row: 4 meaningful cards -->
+        <div class="stats-row">
+          <div class="stat-card" style="--accent:#7c3aed">
+            <div class="stat-icon">📚</div>
+            <div class="stat-body">
+              <div class="stat-value" id="statSubjects">0</div>
+              <div class="stat-label">Active Subjects</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#0891b2">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-body">
+              <div class="stat-value" id="statHours">0h</div>
+              <div class="stat-label">Total Study Hours</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#059669">
+            <div class="stat-icon">✅</div>
+            <div class="stat-body">
+              <div class="stat-value" id="statCompleted">0%</div>
+              <div class="stat-label">Tasks Completed</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#f59e0b">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-body">
+              <div class="stat-value" id="statStreak">0</div>
+              <div class="stat-label">Day Streak</div>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#ec4899">
+            <div class="stat-icon">📝</div>
+            <div class="stat-body">
+              <div class="stat-value" id="statNotes">0</div>
+              <div class="stat-label">Notes Saved</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card" id="dashQuickActions" style="grid-column:span 12;padding:18px 20px;">
+          <div class="card-header" style="margin-bottom:12px;"><h2>⚡ Quick Actions</h2></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="dash-action-btn" onclick="navigateTo('ai-planner')" id="qaPlanner">
+              <span>🗓️</span> Generate Study Plan
+            </button>
+            <button class="dash-action-btn" onclick="navigateTo('content')" id="qaContent">
+              <span>🧠</span> Generate Content
+            </button>
+            <button class="dash-action-btn" onclick="navigateTo('notes')" id="qaNotes">
+              <span>📝</span> Write a Note
+            </button>
+            <button class="dash-action-btn" onclick="navigateTo('ai-tutor')" id="qaTutor">
+              <span>🤖</span> Ask AI Tutor
+            </button>
+            <button class="dash-action-btn" onclick="navigateTo('agent-hub')" id="qaAnalytics">
+              <span>📊</span> View Analytics
+            </button>
+          </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="card today-schedule">
+          <div class="card-header">
+            <h2>Today's Schedule</h2>
+            <span class="live-badge">● LIVE</span>
+          </div>
+          <div class="schedule-timeline" id="todaySchedule">
+            <div class="empty-state">
+              <div class="empty-icon"></div>
+              <p>No sessions scheduled for today</p>
+              <button class="btn-primary btn-sm" onclick="navigateTo('ai-planner')">Generate with AI</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insight Card -->
+        <div class="card ai-insight">
+          <div class="card-header">
+            <h2>AI Insights</h2>
+            <div class="ai-pulse"></div>
+          </div>
+          <div class="insight-content" id="aiInsight">
+            <div class="insight-typing">
+              <span class="insight-icon"></span>
+              <div class="typing-area">
+                <p id="insightText">Analyzing your study patterns...</p>
+                <div class="typing-dots" id="insightDots"><span></span><span></span><span></span></div>
+              </div>
+            </div>
+            <button class="btn-outline btn-sm mt-2" id="refreshInsightBtn" style="margin-top: 10px;">Get Fresh Insight</button>
+          </div>
+        </div>
+
+        <!-- Subject Progress -->
+        <div class="card" id="dashSubjectProgress">
+          <div class="card-header"><h2>📚 Subject Progress</h2></div>
+          <div id="subjectProgressList" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;">
+            <div class="empty-state small"><p>No subjects added yet.</p></div>
+          </div>
+        </div>
+
+        <!-- Upcoming Sessions -->
+        <div class="card" id="dashUpcoming">
+          <div class="card-header"><h2>🗓️ Upcoming Sessions</h2></div>
+          <div id="upcomingSessionsList" style="display:flex;flex-direction:column;gap:0;">
+            <div class="empty-state small"><p>No upcoming sessions.</p></div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card recent-activity">
+          <div class="card-header">
+            <h2>Recent Activity</h2>
+          </div>
+          <div class="activity-list" id="activityList">
+            <div class="empty-state small">
+              <p>No activity yet. Start studying!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Activity Live Feed -->
+        <div class="card" style="grid-column: span 12; border: 1px solid rgba(245,158,11,0.3); background: rgba(245,158,11,0.04);">
+          <div class="card-header">
+            <h2> Autonomous Agent Activity</h2>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span id="orchStatus" style="font-size:0.75em;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.05);color:var(--text-muted);">● idle</span>
+              <button class="btn-outline btn-sm" id="triggerOrchBtn"> Run Now</button>
+            </div>
+          </div>
+          <div id="agentActivityFeed" style="max-height:220px;overflow-y:auto;padding:4px 0;font-size:0.85em;">
+            <div class="empty-state small"><p>Waiting for agent activity...</p></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AI Planner Page -->
+    <div class="page" id="page-ai-planner">
+      <div class="ai-planner-layout">
+        <div class="planner-form-area">
+          <div class="card ai-form-card">
+            <div class="ai-header-glow">
+              <div class="ai-logo-big">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <circle cx="24" cy="24" r="22" fill="url(#aig)" />
+                  <path d="M16 24c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8" stroke="white" stroke-width="2"
+                    stroke-linecap="round" />
+                  <circle cx="24" cy="24" r="3" fill="#00f5d4" />
+                  <path d="M24 16v-3M24 35v-3M16 24H13M35 24h-3" stroke="white" stroke-width="1.5"
+                    stroke-linecap="round" />
+                  <defs>
+                    <linearGradient id="aig" x1="2" y1="2" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#7c3aed" />
+                      <stop offset="1" stop-color="#4f46e5" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <div>
+                <h2>AI Study Planner</h2>
+                <p>Tell me about your study goals and I'll create a personalized plan</p>
+              </div>
+            </div>
+
+            <form class="planner-form" id="plannerForm">
+              <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                  <label> What are you studying?</label>
+                  <input type="text" id="studyTopic" placeholder="e.g. Machine Learning, Calculus, History..." />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label> Start Date</label>
+                  <input type="date" id="startDate" />
+                </div>
+                <div class="form-group">
+                  <label> End / Exam Date</label>
+                  <input type="date" id="goalDate" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label> Daily Study Hours Available</label>
+                  <div class="slider-group">
+                    <input type="range" id="dailyHours" min="1" max="12" value="3" class="slider" />
+                    <span class="slider-value" id="hoursValue">3 hrs</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label> Current Knowledge Level</label>
+                  <div class="level-selector" id="levelSelector">
+                    <button type="button" class="level-btn active" data-level="beginner">Beginner</button>
+                    <button type="button" class="level-btn" data-level="intermediate">Intermediate</button>
+                    <button type="button" class="level-btn" data-level="advanced">Advanced</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group full">
+                  <label> Learning Objectives (comma-separated)</label>
+                  <textarea id="objectives" rows="3"
+                    placeholder="e.g. Understand neural networks, Solve differential equations, Ace the exam..."></textarea>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label> Study Days Per Week</label>
+                  <div class="day-picker" id="dayPicker">
+                    <button type="button" class="day-btn active" data-day="Mon">M</button>
+                    <button type="button" class="day-btn active" data-day="Tue">T</button>
+                    <button type="button" class="day-btn active" data-day="Wed">W</button>
+                    <button type="button" class="day-btn active" data-day="Thu">T</button>
+                    <button type="button" class="day-btn active" data-day="Fri">F</button>
+                    <button type="button" class="day-btn" data-day="Sat">S</button>
+                    <button type="button" class="day-btn" data-day="Sun">S</button>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn-generate" id="generateBtn">
+                <span class="btn-generate-icon"></span>
+                <span id="generateBtnText">Generate My Study Plan</span>
+                <div class="btn-shimmer"></div>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- AI Output Panel -->
+        <div class="planner-output-area" id="plannerOutput" style="display:none">
+          <div class="card output-card">
+            <div class="card-header">
+              <h2> Your AI Study Plan</h2>
+              <div class="output-actions">
+                <button class="btn-outline btn-sm" id="copyPlanBtn">Copy</button>
+                <button class="btn-outline btn-sm" id="savePlanBtn">Save Plan</button>
+              </div>
+            </div>
+            <div class="plan-output" id="planContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subjects Page -->
+    <div class="page" id="page-subjects">
+      <div class="subjects-toolbar">
+        <button class="btn-primary" id="addSubjectBtn">+ Add Subject</button>
+        <div class="subject-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="active">Active</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+      </div>
+      <div class="subjects-grid" id="subjectsGrid">
+        <div class="empty-state large">
+          <div class="empty-icon"></div>
+          <h3>No subjects yet</h3>
+          <p>Add your first subject to get started</p>
+          <button class="btn-primary" id="addSubjectBtn2">+ Add Subject</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Page -->
+    <div class="page" id="page-schedule">
+      <div class="schedule-header">
+        <div class="week-nav">
+          <button class="btn-icon" id="prevWeek">‹</button>
+          <span class="week-label" id="weekLabel"></span>
+          <button class="btn-icon" id="nextWeek">›</button>
+        </div>
+        <button class="btn-primary" id="addSessionBtn">+ Add Session</button>
+      </div>
+      <div class="week-grid" id="weekGrid"></div>
+    </div>
+
+    <!-- Focus Timer Page -->
+    <div class="page" id="page-timer">
+      <div class="timer-layout">
+        <div class="timer-main">
+          <div class="card timer-card">
+            <div class="timer-mode-tabs">
+              <button class="timer-tab active" data-mode="pomodoro" id="tab-pomodoro">Pomodoro</button>
+              <button class="timer-tab" data-mode="short" id="tab-short">Short Break</button>
+              <button class="timer-tab" data-mode="long" id="tab-long">Long Break</button>
+            </div>
+            <div class="timer-display">
+              <svg class="timer-ring-svg" width="280" height="280" viewBox="0 0 280 280">
+                <circle cx="140" cy="140" r="120" fill="none" stroke="#1e1b4b" stroke-width="8" />
+                <circle id="timerRingCircle" cx="140" cy="140" r="120" fill="none" stroke="url(#timerGrad)"
+                  stroke-width="8" stroke-dasharray="753.98" stroke-dashoffset="0" stroke-linecap="round"
+                  transform="rotate(-90 140 140)" />
+                <defs>
+                  <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#7c3aed" />
+                    <stop offset="100%" stop-color="#00f5d4" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="timer-text">
+                <div class="timer-time" id="timerDisplay">25:00</div>
+                <div class="timer-session-label" id="timerLabel">Focus Time</div>
+              </div>
+            </div>
+            <div class="timer-controls">
+              <button class="btn-icon-lg" id="timerReset" title="Reset">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 10a6 6 0 106-6H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                  <path d="M7 7L7 4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button class="btn-start" id="timerStartStop">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="timerIcon">
+                  <path d="M8 5v14l11-7L8 5z" />
+                </svg>
+              </button>
+              <button class="btn-icon-lg" id="timerSkip" title="Skip">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 4l8 6-8 6V4zM16 4v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div class="timer-subject-select">
+              <label>Studying:</label>
+              <select id="timerSubject">
+                <option value="">Select subject...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="timer-sidebar">
+          <div class="card pomodoro-stats">
+            <h3>Today's Sessions</h3>
+            <div class="pomodoro-dots" id="pomodoroDots"></div>
+            <div class="session-stats">
+              <div class="ss-item">
+                <span class="ss-val" id="ssCompleted">0</span>
+                <span class="ss-lbl">Completed</span>
+              </div>
+              <div class="ss-item">
+                <span class="ss-val" id="ssFocusTime">0m</span>
+                <span class="ss-lbl">Focus Time</span>
+              </div>
+            </div>
+          </div>
+          <div class="card timer-tips">
+            <h3> Focus Tips</h3>
+            <ul class="tips-list" id="tipsList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Page -->
+    <div class="page" id="page-content">
+      <div class="content-hub-layout">
+
+        <!-- Left: Subject Selector + Controls -->
+        <div class="content-sidebar">
+          <div class="card" style="border:1px solid rgba(124,58,237,0.3);">
+            <div class="card-header">
+              <h2> Your Subjects</h2>
+              <div class="ai-pulse"></div>
+            </div>
+            <div id="contentSubjectList" style="padding:10px;max-height:320px;overflow-y:auto;">
+              <div class="empty-state small"><p>No subjects yet. Generate a plan first.</p></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px;border:1px solid rgba(0,245,212,0.2);">
+            <div class="card-header"><h2> Knowledge Sources</h2></div>
+            <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcWikipedia" checked style="accent-color:var(--primary);"> Wikipedia (Articles)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcArxiv" checked style="accent-color:var(--primary);"> arXiv (Academic Papers)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcWikibooks" checked style="accent-color:var(--primary);"> Wikibooks (Textbooks)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcWikiversity" checked style="accent-color:var(--primary);"> Wikiversity (Guides)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcOpenLibrary" checked style="accent-color:var(--primary);"> Open Library (Books)
+              </label>
+              <hr style="border:0;border-top:1px solid rgba(255,255,255,0.06);margin:4px 0;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcGroq" checked style="accent-color:var(--primary);"> Groq AI Deep-Dive
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcExamples" checked style="accent-color:var(--primary);"> Real-World Examples
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.88em;cursor:pointer;">
+                <input type="checkbox" id="srcQuiz" checked style="accent-color:var(--primary);"> Quiz &amp; Practice
+              </label>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px;border:1px solid rgba(245,158,11,0.2);">
+            <div class="card-header"><h2> Detail Level</h2></div>
+            <div style="padding:12px;">
+              <div class="level-selector" id="contentLevelSelector" style="flex-direction:column;gap:6px;">
+                <button type="button" class="level-btn" data-level="overview">Overview</button>
+                <button type="button" class="level-btn active" data-level="detailed">Detailed</button>
+                <button type="button" class="level-btn" data-level="expert">Expert / Exam-Ready</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Content Output -->
+        <div class="content-main">
+          <!-- Empty state -->
+          <div id="contentEmptyState" class="card" style="border:2px dashed rgba(124,58,237,0.3);text-align:center;padding:60px 30px;">
+            <div style="font-size:4rem;margin-bottom:20px;"></div>
+            <h2 style="margin-bottom:12px;">Select a Subject to Generate Content</h2>
+            <p style="color:var(--text-muted);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">Pick any subject from the left panel. StudyMind AI will pull data from Wikipedia, enrich it with Groq, generate a full three-phase curriculum with examples, key concepts, quiz questions, and more.</p>
+            <button class="btn-generate" id="contentGenerateFromPlanBtn" style="margin:0 auto;display:flex;">
+              <span class="btn-generate-icon"></span>
+              <span>Generate for First Subject</span>
+              <div class="btn-shimmer"></div>
+            </button>
+          </div>
+
+          <!-- Loading state -->
+          <div id="contentLoadingState" style="display:none;">
+            <div class="card" style="padding:40px;text-align:center;">
+              <div class="content-loading-anim">
+                <div class="load-ring"></div>
+                <div class="load-ring" style="animation-delay:0.3s;"></div>
+                <div class="load-ring" style="animation-delay:0.6s;"></div>
+              </div>
+              <h3 id="contentLoadingMsg" style="margin-top:24px;">Fetching knowledge from Wikipedia...</h3>
+              <div class="content-steps" id="contentSteps"></div>
+            </div>
+          </div>
+
+          <!-- Content output -->
+          <div id="contentOutput" style="display:none;">
+            <!-- Header card -->
+            <div class="card content-header-card" id="contentHeaderCard">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div>
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <div id="contentSubjectIcon" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:rgba(124,58,237,0.15);"></div>
+                    <div>
+                      <h2 id="contentSubjectTitle" style="margin:0;"></h2>
+                      <span id="contentSubjectBadge" style="font-size:0.78em;background:rgba(124,58,237,0.2);color:#a78bfa;padding:2px 10px;border-radius:20px;"></span>
+                    </div>
+                  </div>
+                  <p id="contentSubjectIntro" style="color:var(--text-muted);margin:0;font-size:0.92em;line-height:1.6;"></p>
+                </div>
+                <div style="display:flex;gap:8px;flex-shrink:0;">
+                  <button class="btn-outline btn-sm" id="contentSaveNoteBtn"> Save as Note</button>
+                  <button class="btn-outline btn-sm" id="contentRefreshBtn">↻ Refresh</button>
+                </div>
+              </div>
+              <!-- Source badges -->
+              <div id="contentSourceBadges" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"></div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="content-tabs-bar" id="contentTabsBar">
+              <button class="content-tab active" data-tab="phases"> Study Phases</button>
+              <button class="content-tab" data-tab="concepts"> Key Concepts</button>
+              <button class="content-tab" data-tab="wikipedia"> Sources Info</button>
+              <button class="content-tab" data-tab="examples"> Examples</button>
+              <button class="content-tab" data-tab="quiz"> Quiz</button>
+              <button class="content-tab" data-tab="resources"> Resources</button>
+            </div>
+
+            <!-- Tab panels -->
+            <div id="contentTabPanels">
+              <div class="content-tab-panel active" data-panel="phases" id="panel-phases"></div>
+              <div class="content-tab-panel" data-panel="concepts" id="panel-concepts"></div>
+              <div class="content-tab-panel" data-panel="wikipedia" id="panel-wikipedia"></div>
+              <div class="content-tab-panel" data-panel="examples" id="panel-examples"></div>
+              <div class="content-tab-panel" data-panel="quiz" id="panel-quiz"></div>
+              <div class="content-tab-panel" data-panel="resources" id="panel-resources"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Page -->
+    <div class="page" id="page-notes">
+      <div class="notes-layout">
+        <div class="notes-sidebar">
+          <div class="notes-toolbar">
+            <button class="btn-primary btn-sm" id="newNoteBtn">+ New Note</button>
+            <button class="btn-primary btn-sm" id="autoGenerateNoteBtn"
+              style="background:var(--accent); margin-left: 5px;"> Auto-Generate</button>
+          </div>
+          <div class="notes-list" id="notesList">
+            <div class="empty-state small">
+              <p>No notes yet</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes-editor-area" id="notesEditorArea">
+          <div class="empty-state large">
+            <div class="empty-icon"></div>
+            <h3>Select or create a note</h3>
+            <p>Your notes will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Tutor Page -->
+    <div class="page" id="page-ai-tutor">
+      <div class="tutor-layout" style="display:flex; flex-direction:column; height: 100%; gap: 20px;">
+        <div class="tutor-chat-area" id="tutorChatArea"
+          style="flex: 1; background: var(--card-bg); border-radius: 20px; border: 1px solid var(--border-color); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;">
+          <div class="chat-message bot"
+            style="background: rgba(124, 58, 237, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--primary); align-self: flex-start; max-width: 80%;">
+            <strong>AI Tutor:</strong> Hello! I'm your personal AI study assistant. What would you like to learn today?
+            You can ask me to explain concepts, solve problems, or quiz you!
+          </div>
+        </div>
+        <div class="tutor-input-area" style="display: flex; gap: 10px;">
+          <input type="text" id="tutorInput" placeholder="Ask me anything..."
+            style="flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-light);" />
+          <button class="btn-primary" id="tutorSendBtn" style="padding: 0 25px;">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Hub Page -->
+    <div class="page" id="page-agent-hub">
+      <div style="display:grid;gap:20px;">
+
+        <!-- Progress Monitor Panel -->
+        <div class="card" style="border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.04);">
+          <div class="card-header">
+            <h2> Progress Monitor</h2>
+            <button class="btn-outline btn-sm" id="aiAnalysisBtn"> AI Analysis</button>
+          </div>
+          <div id="progressStatsRow" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;padding:15px;"></div>
+          <div id="progressAiAdvice" style="display:none;padding:10px 15px 15px;border-top:1px solid var(--border-color);font-size:0.88em;color:var(--text-light);line-height:1.6;"></div>
+        </div>
+
+        <div class="card" style="border:1px solid rgba(245,158,11,0.3);">
+          <div class="card-header">
+            <h2> Orchestrator Control</h2>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span id="orchStatus2" style="font-size:0.8em;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:var(--text-muted);">● idle</span>
+              <button class="btn-primary btn-sm" id="triggerOrchBtn2"> Trigger Decision Cycle</button>
+            </div>
+          </div>
+          <div style="padding:15px;">
+            <p style="color:var(--text-muted);font-size:0.9em;margin:0 0 10px;">Last decision: <span id="lastDecisionText" style="color:var(--text-light);">—</span></p>
+            <p style="color:var(--text-muted);font-size:0.85em;margin:0;">The orchestrator wakes every hour, checks your progress, and autonomously decides which agent to invoke — no clicks needed.</p>
+          </div>
+        </div>
+
+        <!-- Autonomous Schedule Panel -->
+        <div class="card" style="border:1px solid rgba(124,58,237,0.25);background:rgba(124,58,237,0.03);">
+          <div class="card-header">
+            <h2> Autonomous Job Schedule</h2>
+            <span style="font-size:0.78em;color:#10b981;padding:3px 10px;border-radius:20px;background:rgba(16,185,129,0.1);">● APScheduler Active</span>
+          </div>
+          <p style="color:var(--text-muted);font-size:0.83em;padding:0 15px 8px;">These jobs run automatically — no human trigger required. The system proactively pushes notifications, reschedules missed sessions, and regenerates plans on its own schedule.</p>
+          <div id="schedulerJobsTable" style="padding:0 10px 10px;">
+            <p style="color:var(--text-muted);font-size:0.85em;padding:10px;">Loading schedule...</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h2> Orchestrator Decision Log</h2></div>
+          <div id="orchLogList" style="max-height:300px;overflow-y:auto;padding:10px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2> Agent Reasoning Traces</h2></div>
+          <div id="agentReasoningList" style="max-height:400px;overflow-y:auto;padding:10px;"></div>
+        </div>
+        <div class="card" style="border:1px solid rgba(124,58,237,0.3);background:rgba(124,58,237,0.04);">
+          <div class="card-header">
+            <h2> Agent Memory State</h2>
+            <button class="btn-outline btn-sm" id="refreshMemoryBtn">↻ Refresh</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:0.83em;padding:0 15px 5px;">Every agent stores what it knew, what it decided, and what happened — across restarts.</p>
+          <div id="agentMemoryView" style="padding:10px;"></div>
+        </div>
+
+        <!-- Message Bus Panel -->
+        <div class="card" style="border:1px solid rgba(8,145,178,0.3);background:rgba(8,145,178,0.04);">
+          <div class="card-header">
+            <h2> Agent Message Bus</h2>
+            <button class="btn-outline btn-sm" id="refreshBusBtn">↻ Refresh</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:0.83em;padding:0 15px 5px;">Real messages passed between agents — delegations, reviews, and completion reports.</p>
+          <div id="agentMessageBusView" style="max-height:320px;overflow-y:auto;padding:10px;"></div>
+        </div>
+
+        <!-- Shared Workspace Panel -->
+        <div class="card" style="border:1px solid rgba(5,150,105,0.3);background:rgba(5,150,105,0.04);">
+          <div class="card-header">
+            <h2> Shared Agent Workspace</h2>
+            <button class="btn-outline btn-sm" id="refreshWorkspaceBtn">↻ Refresh</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:0.83em;padding:0 15px 5px;">Common blackboard — agents write their outputs here so other agents can read them.</p>
+          <div id="agentWorkspaceView" style="max-height:320px;overflow-y:auto;padding:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/app.js?v=5"></script>
+</body>
+
+</html>

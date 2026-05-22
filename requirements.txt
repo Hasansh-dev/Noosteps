@@ -1,0 +1,5 @@
+flask==3.0.3
+groq
+python-dotenv==1.0.1
+APScheduler==3.10.4
+SQLAlchemy==2.0.49
