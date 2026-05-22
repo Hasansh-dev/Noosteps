@@ -149,8 +149,15 @@
     <!-- Top Bar -->
     <header class="topbar">
       <div class="topbar-left">
-        <h1 class="page-title" id="pageTitle">Dashboard</h1>
-        <p class="page-subtitle" id="pageSubtitle">Your AI-powered study command center</p>
+        <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Open menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title" id="pageTitle">Dashboard</h1>
+          <p class="page-subtitle" id="pageSubtitle">Your AI-powered study command center</p>
+        </div>
       </div>
       <div class="topbar-right">
         <div class="search-box" style="position: relative;">
@@ -555,7 +562,7 @@
 
     <!-- Content Page -->
     <div class="page" id="page-content">
-      <div class="content-hub-layout">
+      <div class="content-hub-layout" id="contentHubLayout">
 
         <!-- Left: Subject Selector + Controls -->
         <div class="content-sidebar">
@@ -614,6 +621,9 @@
 
         <!-- Right: Content Output -->
         <div class="content-main">
+          <button id="contentBackBtn" class="btn-outline btn-sm content-back-btn" style="display:none; margin-bottom: 16px; padding: 8px 14px; align-items: center; gap: 6px; border-radius: 8px; font-weight: 500;">
+            ← Back to Subjects
+          </button>
           <!-- Empty state -->
           <div id="contentEmptyState" class="card" style="border:2px dashed rgba(124,58,237,0.3);text-align:center;padding:60px 30px;">
             <div style="font-size:4rem;margin-bottom:20px;"></div>

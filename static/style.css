@@ -2962,4 +2962,241 @@ textarea:focus {
 
 @keyframes topicSpinAnim {
   to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   RESPONSIVENESS AND MOBILE LAYOUTS
+   ========================================================================== */
+
+/* Menu Toggle Button (hidden by default on desktop) */
+.menu-toggle-btn {
+  display: none;
+}
+
+/* Sidebar Toggle (Close Button inside sidebar, hidden on desktop) */
+.sidebar-toggle {
+  display: none;
+}
+
+/* Week Grid and Day Columns */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.day-column {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+}
+
+/* --------------------------------------------------------------------------
+   TABLET & MOBILE BREAKPOINT (max-width: 900px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  /* Sidebar Drawer styling */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    background: #09090b; /* Solid dark background for mobile drawer overlay */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* Overlay cover behind drawer */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Hamburger Menu Toggle Button on Topbar */
+  .menu-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-right: 12px;
+    transition: var(--transition);
+  }
+
+  .menu-toggle-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--text-muted);
+  }
+
+  /* Adjust Main Content to cover full width since sidebar is fixed overlay */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Notes Page: Mobile Switcher (List View vs Editor Panel) */
+  .notes-sidebar {
+    width: 100% !important;
+  }
+
+  .notes-editor-area {
+    display: none;
+  }
+
+  .notes-layout.editor-active .notes-sidebar {
+    display: none !important;
+  }
+
+  .notes-layout.editor-active .notes-editor-area {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .note-back-btn {
+    display: flex !important;
+  }
+
+  /* Content Hub: Mobile Switcher (Subjects List vs Main Content Output) */
+  .content-hub-layout {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .content-sidebar {
+    display: block;
+    position: static !important;
+    width: 100% !important;
+  }
+
+  .content-main {
+    display: none;
+    width: 100% !important;
+  }
+
+  .content-hub-layout.content-active .content-sidebar {
+    display: none !important;
+  }
+
+  .content-hub-layout.content-active .content-main {
+    display: block !important;
+  }
+
+  .content-back-btn {
+    display: flex !important;
+  }
+
+  /* Focus Timer Page: Stack panels */
+  .timer-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* AI Tutor Page height & scrollable containment */
+  #page-ai-tutor {
+    height: calc(100vh - 130px) !important;
+  }
+
+  #page-ai-tutor .tutor-layout {
+    height: 100% !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   MOBILE ONLY BREAKPOINT (max-width: 600px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  /* Smaller margins & paddings across the application */
+  .topbar {
+    padding: 16px 20px !important;
+  }
+
+  .topbar.scrolled {
+    padding: 12px 20px !important;
+  }
+
+  .page {
+    padding: 0 20px 24px !important;
+  }
+
+  /* Stack columns in forms like AI planner */
+  .form-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .form-group {
+    width: 100% !important;
+  }
+
+  .slider-group {
+    width: 100% !important;
+  }
+
+  /* Adjust level selector for small screens */
+  .level-selector {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .level-btn {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* Scale Pomodoro Timer widget */
+  .timer-display {
+    transform: scale(0.85);
+    margin-top: -20px;
+    margin-bottom: 20px;
+  }
+
+  /* Topbar stack search box & controls if needed */
+  .topbar-right {
+    gap: 12px !important;
+  }
+
+  .search-box input {
+    width: 120px !important;
+  }
 }

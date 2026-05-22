@@ -86,8 +86,54 @@ function setupNavigation() {
       e.preventDefault();
       const pageId = item.getAttribute('data-page');
       navigateTo(pageId);
+      
+      // Close sidebar on navigation (on mobile/tablet)
+      if (window.innerWidth <= 900) {
+        sidebar.classList.remove('open');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (overlay) overlay.classList.remove('active');
+      }
     });
   });
+
+  // Mobile/Tablet Sidebar Toggles
+  const menuToggleBtn = document.getElementById('menuToggleBtn');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  
+  if (menuToggleBtn) {
+    menuToggleBtn.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      let overlay = document.getElementById('sidebarOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'sidebarOverlay';
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('active');
+        });
+      }
+      setTimeout(() => overlay.classList.add('active'), 10);
+    });
+  }
+  
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (overlay) overlay.classList.remove('active');
+    });
+  }
+
+  // Mobile Back Button inside Content Hub
+  const contentBackBtn = document.getElementById('contentBackBtn');
+  if (contentBackBtn) {
+    contentBackBtn.addEventListener('click', () => {
+      const layout = document.getElementById('contentHubLayout');
+      if (layout) layout.classList.remove('content-active');
+    });
+  }
 }
 
 function navigateTo(pageId) {
@@ -546,6 +592,10 @@ function deleteNote(id) {
             <h3>Select or create a note</h3>
             <p>Your notes will appear here</p>
           </div>`;
+        const notesLayout = document.querySelector('.notes-layout');
+        if (notesLayout) {
+          notesLayout.classList.remove('editor-active');
+        }
         showToast('Note deleted', 'info');
       }
     });
@@ -693,6 +743,11 @@ function openNote(id) {
   if (!note) return;
   const editorArea = document.getElementById('notesEditorArea');
   
+  const notesLayout = document.querySelector('.notes-layout');
+  if (notesLayout) {
+    notesLayout.classList.add('editor-active');
+  }
+  
   // Default to edit mode if note is completely empty
   const defaultToEdit = !note.body || note.body.trim() === '';
 
@@ -700,6 +755,7 @@ function openNote(id) {
     <div class="note-editor" style="display:flex; flex-direction:column; height:100%;">
       <!-- Header Toolbar -->
       <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 24px; border-bottom:1px solid var(--border-color); gap:16px;">
+        <button id="noteBackBtn" class="btn-outline btn-sm note-back-btn" style="display:none; align-items:center; gap:6px; border-radius:8px; font-weight:500; padding:8px 12px;">← Back</button>
         <input type="text" class="note-title-input" value="${note.title || ''}" placeholder="Note Title" style="flex:1; margin:0; padding:0; border:none; background:transparent; font-size:1.5rem; font-weight:700; color:var(--text-main); outline:none;">
         <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
           <!-- Edit/Preview Glass Switcher -->
@@ -734,6 +790,14 @@ function openNote(id) {
   `;
 
   editorArea.querySelector('#deleteNoteEditorBtn').addEventListener('click', () => deleteNote(id));
+  
+  const noteBackBtn = editorArea.querySelector('#noteBackBtn');
+  if (noteBackBtn) {
+    noteBackBtn.addEventListener('click', () => {
+      const layout = document.querySelector('.notes-layout');
+      if (layout) layout.classList.remove('editor-active');
+    });
+  }
   
   const titleInput = editorArea.querySelector('.note-title-input');
   const bodyInput = editorArea.querySelector('#noteBodyInput');
@@ -2556,6 +2620,11 @@ function triggerContentGeneration(subject) {
   contentState.activeSubject = subject;
   contentState.generating = false;
   renderContentSubjectList();
+
+  const contentLayout = document.getElementById('contentHubLayout');
+  if (contentLayout) {
+    contentLayout.classList.add('content-active');
+  }
 
   // Check if this subject has phase-synced content
   fetch(`/api/study_phases/${encodeURIComponent(subject.name)}`)
