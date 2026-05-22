@@ -413,16 +413,45 @@ def get_master_db_connection():
 
 def init_master_db():
     conn = get_master_db_connection()
-    conn.execute('''CREATE TABLE IF NOT EXISTS profile (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL, email TEXT, institution TEXT,
-        bio TEXT, level TEXT DEFAULT 'Beginner',
-        goal TEXT DEFAULT 'Learn and grow',
-        avatar_color TEXT DEFAULT '#7c3aed')''')
+    # Check current table schema of profile
+    cursor = conn.execute("PRAGMA table_info(profile)")
+    columns = cursor.fetchall()
+    
+    # If the profile table exists, check if 'id' type is INTEGER/INT
+    is_integer_id = False
+    table_exists = len(columns) > 0
+    for col in columns:
+        if col[1] == 'id' and 'INT' in col[2].upper():
+            is_integer_id = True
+            
+    if table_exists and is_integer_id:
+        # Migrate 'profile' table to use TEXT id
+        conn.execute("ALTER TABLE profile RENAME TO profile_old")
+        conn.execute('''CREATE TABLE profile (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL, email TEXT, institution TEXT,
+            bio TEXT, level TEXT DEFAULT 'Beginner',
+            goal TEXT DEFAULT 'Learn and grow',
+            avatar_color TEXT DEFAULT '#7c3aed')''')
+        # Copy data casting id to TEXT
+        conn.execute('''INSERT INTO profile (id, name, email, institution, bio, level, goal, avatar_color)
+                        SELECT CAST(id AS TEXT), name, email, institution, bio, level, goal, avatar_color FROM profile_old''')
+        conn.execute("DROP TABLE profile_old")
+        conn.commit()
+    elif not table_exists:
+        conn.execute('''CREATE TABLE profile (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL, email TEXT, institution TEXT,
+            bio TEXT, level TEXT DEFAULT 'Beginner',
+            goal TEXT DEFAULT 'Learn and grow',
+            avatar_color TEXT DEFAULT '#7c3aed')''')
+        conn.commit()
+        
     if conn.execute('SELECT COUNT(*) FROM profile').fetchone()[0] == 0:
-        conn.execute('INSERT INTO profile (name,email,institution,bio) VALUES (?,?,?,?)',
-                     ('Student', 'student@example.com', 'Self Taught', 'Ready to learn!'))
-    conn.commit()
+        conn.execute("INSERT INTO profile (id, name,email,institution,bio) VALUES (?,?,?,?,?)",
+                     ('1', 'Student', 'student@example.com', 'Self Taught', 'Ready to learn!'))
+        conn.commit()
+        
     profs = conn.execute('SELECT id FROM profile').fetchall()
     conn.close()
     for p in profs:
@@ -438,6 +467,9 @@ def get_db_connection():
         profile_id = getattr(g, 'profile_id', '1')
         
     db_name = 'database.db' if str(profile_id) == '1' else f'database_{profile_id}.db'
+    if not os.path.exists(db_name):
+        init_user_db(profile_id)
+        
     conn = sqlite3.connect(db_name)
     conn.row_factory = sqlite3.Row
     return conn
@@ -2083,39 +2115,70 @@ def mark_read():
     return jsonify({"success":True})
 
 
+# ── Firebase Config ──
+@app.route('/api/firebase-config')
+def firebase_config():
+    return jsonify({
+        "apiKey": os.environ.get("FIREBASE_API_KEY", ""),
+        "authDomain": os.environ.get("FIREBASE_AUTH_DOMAIN", ""),
+        "projectId": os.environ.get("FIREBASE_PROJECT_ID", ""),
+        "storageBucket": os.environ.get("FIREBASE_STORAGE_BUCKET", ""),
+        "messagingSenderId": os.environ.get("FIREBASE_MESSAGING_SENDER_ID", ""),
+        "appId": os.environ.get("FIREBASE_APP_ID", "")
+    })
+
+
 # ── Profiles ──
 @app.route('/api/profiles', methods=['GET','POST'])
 def handle_profiles():
     conn = get_master_db_connection()
     if request.method == 'POST':
         data = request.json
-        cur = conn.execute(
-            'INSERT INTO profile (name,email,institution,bio,level,goal,avatar_color) VALUES (?,?,?,?,?,?,?)',
-            (data.get('name','New Student'), data.get('email',''), data.get('institution',''),
-             data.get('bio',''), data.get('level','Beginner'), data.get('goal','Learn and grow'),
-             data.get('avatar_color','#7c3aed')))
-        conn.commit()
-        new_id = cur.lastrowid
-        conn.close()
-        
-        # Initialize the new user db
-        init_user_db(new_id)
-        
-        return jsonify({"id":new_id,"success":True})
+        uid = data.get('id')
+        if uid:
+            # Check if profile already exists
+            existing = conn.execute('SELECT * FROM profile WHERE id=?', (str(uid),)).fetchone()
+            if existing:
+                conn.close()
+                return jsonify({"id": uid, "success": True, "already_exists": True})
+            
+            conn.execute(
+                'INSERT INTO profile (id, name, email, institution, bio, level, goal, avatar_color) VALUES (?,?,?,?,?,?,?,?)',
+                (str(uid), data.get('name','New Student'), data.get('email',''), data.get('institution',''),
+                 data.get('bio',''), data.get('level','Beginner'), data.get('goal','Learn and grow'),
+                 data.get('avatar_color','#7c3aed')))
+            conn.commit()
+            conn.close()
+            init_user_db(uid)
+            return jsonify({"id": uid, "success": True})
+        else:
+            # Legacy/fallback behavior or when creating a new profile without UID
+            import uuid
+            new_id = str(uuid.uuid4())
+            conn.execute(
+                'INSERT INTO profile (id, name, email, institution, bio, level, goal, avatar_color) VALUES (?,?,?,?,?,?,?,?)',
+                (new_id, data.get('name','New Student'), data.get('email',''), data.get('institution',''),
+                 data.get('bio',''), data.get('level','Beginner'), data.get('goal','Learn and grow'),
+                 data.get('avatar_color','#7c3aed')))
+            conn.commit()
+            conn.close()
+            init_user_db(new_id)
+            return jsonify({"id": new_id, "success": True})
+            
     profs = conn.execute('SELECT * FROM profile').fetchall()
     conn.close()
     return jsonify([dict(p) for p in profs])
 
 
-@app.route('/api/profiles/<int:prof_id>', methods=['GET','PUT', 'DELETE'])
+@app.route('/api/profiles/<prof_id>', methods=['GET','PUT', 'DELETE'])
 def specific_profile(prof_id):
     conn = get_master_db_connection()
     if request.method == 'DELETE':
-        conn.execute('DELETE FROM profile WHERE id=?', (prof_id,))
+        conn.execute('DELETE FROM profile WHERE id=?', (str(prof_id),))
         conn.commit()
         conn.close()
         # Optionally, delete the database file
-        db_file = 'database.db' if prof_id == 1 else f'database_{prof_id}.db'
+        db_file = 'database.db' if str(prof_id) == '1' else f'database_{prof_id}.db'
         if os.path.exists(db_file):
             try:
                 os.remove(db_file)
@@ -2127,11 +2190,11 @@ def specific_profile(prof_id):
         conn.execute(
             'UPDATE profile SET name=?,email=?,institution=?,bio=?,level=?,goal=? WHERE id=?',
             (data.get('name'), data.get('email'), data.get('institution'),
-             data.get('bio'), data.get('level'), data.get('goal'), prof_id))
+             data.get('bio'), data.get('level'), data.get('goal'), str(prof_id)))
         conn.commit()
         conn.close()
         return jsonify({"success":True})
-    prof = conn.execute('SELECT * FROM profile WHERE id=?', (prof_id,)).fetchone()
+    prof = conn.execute('SELECT * FROM profile WHERE id=?', (str(prof_id),)).fetchone()
     conn.close()
     return jsonify(dict(prof)) if prof else (jsonify({"error":"Not found"}), 404)
 

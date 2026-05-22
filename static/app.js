@@ -1906,44 +1906,18 @@ function setupProfile() {
   avatar.style.cursor = 'pointer';
   avatar.title = "View Profile";
   
-  let activeProfileId = localStorage.getItem('activeProfileId') || 1;
+  const activeProfileId = localStorage.getItem('activeProfileId') || '1';
   
   const loadProfiles = () => {
-    fetch('/api/profiles')
+    fetch(`/api/profiles/${activeProfileId}`)
       .then(res => res.json())
       .then(data => {
-        state.allProfiles = data;
-        const current = data.find(p => p.id == activeProfileId) || data[0];
-        if (current) {
-          state.profile = current;
-          activeProfileId = current.id;
-          localStorage.setItem('activeProfileId', activeProfileId);
-          avatar.textContent = current.name.charAt(0).toUpperCase();
-          avatar.style.background = current.avatar_color || 'var(--primary)';
+        if (data && !data.error) {
+          state.profile = data;
+          avatar.textContent = data.name.charAt(0).toUpperCase();
+          avatar.style.background = data.avatar_color || 'var(--primary)';
         }
       });
-  };
-  
-  window.switchProfile = (id) => {
-    localStorage.setItem('activeProfileId', id);
-    activeProfileId = id;
-    window.location.reload();
-  };
-  
-  window.addNewProfile = () => {
-    const name = prompt("Enter new student name:");
-    if (!name) return;
-    const color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-    
-    fetch('/api/profiles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name, avatar_color: color })
-    })
-    .then(res => res.json())
-    .then(data => {
-      switchProfile(data.id);
-    });
   };
   
   avatar.addEventListener('click', () => {
@@ -1951,32 +1925,16 @@ function setupProfile() {
     const modalBody = document.getElementById('modalBody');
     const modalOverlay = document.getElementById('modalOverlay');
     
-    modalTitle.textContent = "Profile Hub";
-    
-    let otherProfilesHtml = state.allProfiles.filter(p => p.id != activeProfileId).map(p => `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 5px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width:30px; height:30px; border-radius:50%; background:${p.avatar_color || '#7c3aed'}; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px;">${p.name.charAt(0).toUpperCase()}</div>
-          <span>${p.name}</span>
-        </div>
-        <button class="btn-outline btn-sm" onclick="switchProfile(${p.id})">Switch</button>
-      </div>
-    `).join('');
-    
-    if(!otherProfilesHtml) otherProfilesHtml = '<p style="color:var(--text-muted); font-size:0.9em;">No other profiles found.</p>';
+    modalTitle.textContent = "Google Account Profile";
     
     modalBody.innerHTML = `
       <div style="display: flex; gap: 20px; flex-wrap: wrap;">
         <!-- Left: Edit Form -->
         <div style="flex: 1; min-width: 250px; border-right: 1px solid var(--border-color); padding-right: 20px;">
-          <h4 style="margin-top: 0; color: var(--primary);">Edit Current Profile</h4>
+          <h4 style="margin-top: 0; color: var(--primary);">Study Profile Details</h4>
           <div class="form-group" style="margin-bottom: 15px;">
             <label>Full Name</label>
             <input type="text" id="profName" value="${state.profile.name || ''}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white;">
-          </div>
-          <div class="form-group" style="margin-bottom: 15px;">
-            <label>Email Address</label>
-            <input type="email" id="profEmail" value="${state.profile.email || ''}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white;">
           </div>
           <div class="form-group" style="margin-bottom: 15px;">
             <label>Institution / School</label>
@@ -2001,25 +1959,24 @@ function setupProfile() {
             </div>
           </div>
           <button class="btn-primary" id="saveProfileBtn" style="width: 100%; margin-bottom: 10px;">Save Details</button>
-          <button class="btn-outline" id="deleteProfileBtn" style="width: 100%; border-color: #ef4444; color: #ef4444;">Delete Profile</button>
         </div>
         
-        <!-- Right: Profile Switcher -->
-        <div style="flex: 1; min-width: 250px;">
-          <h4 style="margin-top: 0; color: var(--primary);">Current Profile</h4>
-          <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
-             <div style="width:50px; height:50px; border-radius:50%; background:${state.profile.avatar_color || '#7c3aed'}; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;">${state.profile.name.charAt(0).toUpperCase()}</div>
-             <div>
-                <strong style="display:block; font-size:1.1em;">${state.profile.name}</strong>
-                <span style="color:var(--text-muted); font-size:0.85em;">${state.profile.email || 'No email set'}</span>
-             </div>
+        <!-- Right: Google Account Details & Sign Out -->
+        <div style="flex: 1; min-width: 250px; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <h4 style="margin-top: 0; color: var(--primary);">Google Account</h4>
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+               <div id="modalGoogleAvatar" style="width:50px; height:50px; border-radius:50%; background:${state.profile.avatar_color || '#7c3aed'}; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:20px;">${state.profile.name.charAt(0).toUpperCase()}</div>
+               <div>
+                  <strong style="display:block; font-size:1.1em;">${state.profile.name}</strong>
+                  <span style="color:var(--text-muted); font-size:0.85em;">${state.profile.email || 'No email set'}</span>
+               </div>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.85em; line-height:1.4;">
+              All your planners, schedules, subjects, and notes are automatically saved and synced to your unique Google account.
+            </p>
           </div>
-          
-          <h4 style="color: var(--primary);">Switch Profiles</h4>
-          <div style="max-height: 150px; overflow-y: auto; margin-bottom: 15px;">
-            ${otherProfilesHtml}
-          </div>
-          <button class="btn-outline" style="width: 100%; border-style: dashed;" onclick="addNewProfile()">+ Add Another Profile</button>
+          <button class="btn-outline" id="googleSignOutBtn" style="width: 100%; border-color: #ef4444; color: #ef4444; margin-top: 20px;">Sign Out of Google</button>
         </div>
       </div>
     `;
@@ -2028,7 +1985,6 @@ function setupProfile() {
     
     document.getElementById('saveProfileBtn').addEventListener('click', () => {
       const newName = document.getElementById('profName').value;
-      const newEmail = document.getElementById('profEmail').value;
       const newInst = document.getElementById('profInst').value;
       const newBio = document.getElementById('profBio').value;
       const newLevel = document.getElementById('profLevel').value;
@@ -2037,7 +1993,7 @@ function setupProfile() {
       fetch(`/api/profiles/${activeProfileId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, email: newEmail, institution: newInst, bio: newBio, level: newLevel, goal: newGoal })
+        body: JSON.stringify({ name: newName, email: state.profile.email, institution: newInst, bio: newBio, level: newLevel, goal: newGoal })
       })
       .then(res => res.json())
       .then(data => {
@@ -2049,26 +2005,24 @@ function setupProfile() {
       });
     });
 
-    document.getElementById('deleteProfileBtn').addEventListener('click', () => {
-      if (!confirm("Are you sure you want to delete this profile? All data associated with it will be lost forever.")) return;
+    document.getElementById('googleSignOutBtn').addEventListener('click', () => {
+      if (localStorage.getItem('isGuestMode') === 'true') {
+        localStorage.removeItem('activeProfileId');
+        localStorage.removeItem('isGuestMode');
+        closeModal();
+        showToast('Signed out from Guest Mode!', 'success');
+        window.location.reload();
+        return;
+      }
       
-      fetch(`/api/profiles/${activeProfileId}`, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const remaining = state.allProfiles.filter(p => p.id != activeProfileId);
-          if (remaining.length > 0) {
-            switchProfile(remaining[0].id);
-          } else {
-            fetch('/api/profiles', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: 'Student', avatar_color: '#7c3aed' })
-            }).then(r => r.json()).then(d => {
-              switchProfile(d.id);
-            });
-          }
-        }
+      firebase.auth().signOut().then(() => {
+        localStorage.removeItem('activeProfileId');
+        localStorage.removeItem('isGuestMode');
+        closeModal();
+        showToast('Signed out successfully!', 'success');
+        window.location.reload();
+      }).catch(err => {
+        showToast('Sign-out failed: ' + err.message, 'error');
       });
     });
   });
@@ -2534,13 +2488,319 @@ function init() {
   setupExpandableHeadings();
 }
 
-console.log("Setting up StudyMind AI...");
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
+// Auth and initialization state
+let isAppInitialized = false;
+
+function initFirebase() {
+  const overlay = document.getElementById('loginOverlay');
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+
+  // Fetch firebase config
+  fetch('/api/firebase-config')
+    .then(res => res.json())
+    .then(config => {
+      if (!config.apiKey) {
+        console.error("Firebase config is missing API key! Make sure to set environment variables.");
+        const loader = document.getElementById('authLoader');
+        if (loader) {
+          loader.innerHTML = `
+            <p style="color:#ef4444; font-weight:600;">Firebase configuration is missing!</p>
+            <p style="font-size:0.85em; max-width:280px; margin: 8px auto 0; line-height:1.4;">
+              Please configure your Firebase credentials in the <code>.env</code> file and restart the server.
+            </p>
+          `;
+        }
+        return;
+      }
+      
+      // Initialize Firebase App
+      firebase.initializeApp(config);
+      const auth = firebase.auth();
+
+      // Helper to construct friendly troubleshooting messages
+      function getTroubleshootingMessage(error) {
+        let msg = `Sign-in failed: ${error.message}`;
+        if (error.code === 'auth/network-request-failed') {
+          msg += `<br><br><strong>Troubleshooting Tips for Network Error:</strong>
+          <ol style="margin-left: 20px; margin-top: 8px; line-height: 1.5; text-align: left;">
+            <li><strong>Ad-Blocker / Shields:</strong> If you are using Brave browser or have extensions like uBlock Origin or AdBlock, they block Firebase popup communication frames by default. <strong>Please turn off Brave Shields / Ad-blocker for localhost</strong> and try again.</li>
+            <li><strong>Try Redirect Method:</strong> Click the <em>"Try redirect sign-in"</em> link below. It operates in the main window instead of a popup and bypasses most ad-blocker limitations.</li>
+            <li><strong>Connection check:</strong> Check your internet connection or active VPN proxy.</li>
+          </ol>`;
+        } else if (error.code === 'auth/popup-blocked') {
+          msg += `<br><br><strong>Troubleshooting Tip:</strong> Your browser blocked the login popup. Please allow popups for this site, or click the <strong>redirect sign-in</strong> option below.`;
+        }
+        return msg;
+      }
+
+      // Handle redirect results if we used signInWithRedirect
+      auth.getRedirectResult().then(result => {
+        if (result && result.user) {
+          console.log("Redirect sign-in successful:", result.user.email);
+        }
+      }).catch(error => {
+        console.error("Firebase redirect sign-in error:", error);
+        showToast("Redirect sign-in failed: " + error.message, "error");
+        const errDiv = document.getElementById('authError');
+        if (errDiv) {
+          errDiv.innerHTML = getTroubleshootingMessage(error);
+          errDiv.style.display = 'block';
+        }
+      });
+      
+      // Attach login button handler (Popup method)
+      const loginBtn = document.getElementById('googleSignInBtn');
+      if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+          // Clear and hide previous error messages
+          const errDiv = document.getElementById('authError');
+          if (errDiv) {
+            errDiv.style.display = 'none';
+            errDiv.innerHTML = '';
+          }
+
+          // Show loader while signing in
+          document.getElementById('authActions').style.display = 'none';
+          const loader = document.getElementById('authLoader');
+          if (loader) {
+            loader.style.display = 'flex';
+            loader.querySelector('p').textContent = 'Connecting with Google...';
+          }
+          
+          const provider = new firebase.auth.GoogleAuthProvider();
+          auth.signInWithPopup(provider).catch(error => {
+            console.error("Firebase sign-in error:", error);
+            showToast("Sign-in failed: " + error.message, "error");
+            
+            const errDiv = document.getElementById('authError');
+            if (errDiv) {
+              errDiv.innerHTML = getTroubleshootingMessage(error);
+              errDiv.style.display = 'block';
+            }
+
+            // Restore buttons
+            if (loader) loader.style.display = 'none';
+            document.getElementById('authActions').style.display = 'block';
+          });
+        });
+      }
+
+      // Attach redirect button handler (Redirect method)
+      const redirectLoginBtn = document.getElementById('googleRedirectSignInBtn');
+      if (redirectLoginBtn) {
+        redirectLoginBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Clear and hide previous error messages
+          const errDiv = document.getElementById('authError');
+          if (errDiv) {
+            errDiv.style.display = 'none';
+            errDiv.innerHTML = '';
+          }
+
+          // Show loader while signing in
+          document.getElementById('authActions').style.display = 'none';
+          const loader = document.getElementById('authLoader');
+          if (loader) {
+            loader.style.display = 'flex';
+            loader.querySelector('p').textContent = 'Redirecting to Google...';
+          }
+          
+          const provider = new firebase.auth.GoogleAuthProvider();
+          auth.signInWithRedirect(provider).catch(error => {
+            console.error("Firebase redirect start error:", error);
+            showToast("Redirect start failed: " + error.message, "error");
+            
+            const errDiv = document.getElementById('authError');
+            if (errDiv) {
+              errDiv.innerHTML = getTroubleshootingMessage(error);
+              errDiv.style.display = 'block';
+            }
+
+            // Restore buttons
+            if (loader) loader.style.display = 'none';
+            document.getElementById('authActions').style.display = 'block';
+          });
+        });
+      }
+
+      // Attach guest button handler (Offline Guest method)
+      const guestLoginBtn = document.getElementById('localGuestSignInBtn');
+      if (guestLoginBtn) {
+        guestLoginBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // Clear and hide previous error messages
+          const errDiv = document.getElementById('authError');
+          if (errDiv) {
+            errDiv.style.display = 'none';
+            errDiv.innerHTML = '';
+          }
+
+          // Show loader while signing in
+          document.getElementById('authActions').style.display = 'none';
+          const loader = document.getElementById('authLoader');
+          if (loader) {
+            loader.style.display = 'flex';
+            loader.querySelector('p').textContent = 'Initializing Offline Guest Mode...';
+          }
+
+          const guestId = 'guest_user';
+          
+          // Ensure profile exists in SQLite database
+          fetch('/api/profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: guestId,
+              name: 'Guest Student',
+              email: 'guest@studymind.local',
+              avatar_color: '#00f5d4'
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              // Update local state and storage
+              localStorage.setItem('activeProfileId', guestId);
+              localStorage.setItem('isGuestMode', 'true');
+              
+              // Unblur and hide overlay
+              if (overlay) overlay.classList.remove('active');
+              if (sidebar) sidebar.classList.remove('blurred-auth');
+              if (mainContent) mainContent.classList.remove('blurred-auth');
+              
+              // Initialize app once authenticated
+              if (!isAppInitialized) {
+                isAppInitialized = true;
+                init();
+              }
+            } else {
+              showToast("Failed to initialize guest profile in database.", "error");
+              if (loader) loader.style.display = 'none';
+              document.getElementById('authActions').style.display = 'block';
+            }
+          })
+          .catch(err => {
+            console.error("Error creating Guest profile:", err);
+            showToast("Local database connection error.", "error");
+            if (loader) loader.style.display = 'none';
+            document.getElementById('authActions').style.display = 'block';
+          });
+        });
+      }
+      
+      // Monitor Auth state changes
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          // Clear Guest Mode if user logs in via Google
+          localStorage.removeItem('isGuestMode');
+          console.log("User is signed in:", user.email);
+          
+          // Ensure profile exists in SQLite database
+          fetch('/api/profiles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: user.uid,
+              name: user.displayName || 'Google Student',
+              email: user.email,
+              avatar_color: '#7c3aed'
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              // Update local state and storage
+              localStorage.setItem('activeProfileId', user.uid);
+              
+              // Unblur and hide overlay
+              if (overlay) overlay.classList.remove('active');
+              if (sidebar) sidebar.classList.remove('blurred-auth');
+              if (mainContent) mainContent.classList.remove('blurred-auth');
+              
+              // Initialize app once authenticated
+              if (!isAppInitialized) {
+                isAppInitialized = true;
+                init();
+              }
+            } else {
+              showToast("Failed to link account to database.", "error");
+              const errDiv = document.getElementById('authError');
+              if (errDiv) {
+                errDiv.textContent = "Failed to link account to database: " + (data.error || "Unknown database error");
+                errDiv.style.display = 'block';
+              }
+              // Sign out from Firebase if SQLite link fails so user can try again
+              auth.signOut().catch(e => console.error("Sign out error:", e));
+            }
+          })
+          .catch(err => {
+            console.error("Error creating SQLite profile:", err);
+            showToast("Database synchronization error.", "error");
+            const errDiv = document.getElementById('authError');
+            if (errDiv) {
+              errDiv.textContent = "Database sync error: " + (err.message || err);
+              errDiv.style.display = 'block';
+            }
+            // Sign out from Firebase if SQLite link fails so user can try again
+            auth.signOut().catch(e => console.error("Sign out error:", e));
+          });
+          
+        } else {
+          // Check if guest mode is active first
+          if (localStorage.getItem('isGuestMode') === 'true') {
+            console.log("Active profile is local guest account.");
+            const guestId = localStorage.getItem('activeProfileId') || 'guest_user';
+            
+            // Unblur and hide overlay
+            if (overlay) overlay.classList.remove('active');
+            if (sidebar) sidebar.classList.remove('blurred-auth');
+            if (mainContent) mainContent.classList.remove('blurred-auth');
+            
+            if (!isAppInitialized) {
+              isAppInitialized = true;
+              init();
+            }
+            return;
+          }
+
+          console.log("No user signed in.");
+          localStorage.removeItem('activeProfileId');
+          
+          if (overlay) overlay.classList.add('active');
+          if (sidebar) sidebar.classList.add('blurred-auth');
+          if (mainContent) mainContent.classList.remove('blurred-auth'); // wait, we must blur it, so add the class
+          if (mainContent) mainContent.classList.add('blurred-auth');
+          
+          const loader = document.getElementById('authLoader');
+          if (loader) loader.style.display = 'none';
+          const actions = document.getElementById('authActions');
+          if (actions) actions.style.display = 'block';
+          
+          isAppInitialized = false;
+        }
+      });
+      
+    })
+    .catch(err => {
+      console.error("Failed to load Firebase configuration:", err);
+      const loader = document.getElementById('authLoader');
+      if (loader) {
+        loader.innerHTML = `
+          <p style="color:#ef4444; font-weight:600;">Failed to fetch configuration!</p>
+          <p style="font-size:0.85em; max-width:280px; margin: 8px auto 0;">Check your network connection.</p>
+        `;
+      }
+    });
 }
-console.log("Setup complete. Nav items found:", navItems.length);
+
+console.log("Setting up StudyMind AI with Firebase Auth...");
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initFirebase);
+} else {
+  initFirebase();
+}
 
 // ─────────────────────────────────────────
 // CONTENT HUB
