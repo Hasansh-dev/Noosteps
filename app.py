@@ -19,6 +19,7 @@ from email.mime.multipart import MIMEMultipart
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 import atexit
@@ -1367,6 +1368,12 @@ def job_startup_scan():
     except Exception as e:
         _log_orchestrator("ERROR", "Startup Scanner", str(e))
 
+    # Safe self-removal — ignore if already removed by APScheduler
+    try:
+        _scheduler.remove_job('startup_scan')
+    except Exception:
+        pass
+
 
 @run_for_all_profiles
 def job_phase_unlock_check():
@@ -1421,8 +1428,10 @@ def _start_scheduler():
     """
     # In debug mode Flask spawns a child process (WERKZEUG_RUN_MAIN=true).
     # We only want to start the scheduler in the real process.
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "false":
-        return None
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        pass  # child process — allow
+    elif os.environ.get("WERKZEUG_RUN_MAIN") is not None:
+        return None  # parent watcher process — skip
 
     jobstores = {
         'default': SQLAlchemyJobStore(url='sqlite:///apscheduler_jobs.db')
@@ -1472,7 +1481,8 @@ def _start_scheduler():
         run_date=datetime.now() + timedelta(seconds=30),
         id='startup_scan',
         name='Startup Health Scan',
-        replace_existing=True
+        replace_existing=True,
+        misfire_grace_time=300
     )
 
     # 6. Daily phase unlock check — 00:10 UTC
@@ -1484,7 +1494,8 @@ def _start_scheduler():
         replace_existing=True
     )
 
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.start()
     atexit.register(lambda: scheduler.shutdown(wait=False))
     return scheduler
 
@@ -3160,4 +3171,4 @@ def expand_topic():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
